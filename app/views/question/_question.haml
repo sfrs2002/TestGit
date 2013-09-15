@@ -1,0 +1,7 @@
+- case q.class
+- when ChoiceQuestion
+  = render partial: "question/choice_question", locals: { q: q }
+- when BlankQuestion
+  = render partial: "question/blank_question", locals: { q: q }
+- when CalQuestion
+  = render partial: "question/cal_question", locals: { q: q }

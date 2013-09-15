@@ -1,0 +1,7 @@
+- content_for :app_head do
+  = yield :head
+- content_for :app_content do
+  %h1= "题魔方，管理员界面"
+  = yield
+
+= render :template => 'layouts/application'

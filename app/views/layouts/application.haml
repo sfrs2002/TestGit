@@ -1,0 +1,12 @@
+%html
+  %head
+    %title MathLib
+    = stylesheet_link_tag "application", :media => "all"
+    = javascript_include_tag "application"
+    = yield :app_head
+    = csrf_meta_tags
+  %body
+    .message
+      %p.notice= notice
+      %p.alert= alert
+    = yield :app_content

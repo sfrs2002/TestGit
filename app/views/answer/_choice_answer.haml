@@ -1,0 +1,8 @@
+.choice_answer
+  %h3 答案选项
+  %p
+    %span= d2c(a.choice)
+  %h3 解题过程
+  %p
+    - a.procedures.each do |e|
+      %p= e.render_tex.html_safe
