@@ -4,5 +4,5 @@
   %p
   - q.items.each_with_index do |e, index|
     %span= (d2c(index) + e.render_tex).html_safe
-    - if index % q.item_num_per_row != 0
+    - if (index + 1) % q.item_num_per_row == 0
       %br

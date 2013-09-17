@@ -1,6 +1,11 @@
 MathLib::Application.routes.draw do
   namespace :admin do
     resources :questions
+    resources :structures do
+      member do
+        get :children
+      end
+    end
   end
   # The priority is based upon order of creation:
   # first created -> highest priority.

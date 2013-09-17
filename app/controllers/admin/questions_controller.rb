@@ -16,7 +16,7 @@ class Admin::QuestionsController < Admin::ApplicationController
   end
 
   def index
-    @questions = Question.all
+    @questions = Question.search(params[:search])
   end
 
   def update

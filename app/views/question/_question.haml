@@ -5,3 +5,8 @@
   = render partial: "question/blank_question", locals: { q: q }
 - when CalQuestion
   = render partial: "question/cal_question", locals: { q: q }
+= form_tag("/admin/questions/move", method: "put") do
+  %p
+    = label_tag :search, "移至与该题同组"
+    = text_field_tag :tag
+    = submit_tag "move"
