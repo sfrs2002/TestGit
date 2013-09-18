@@ -16,6 +16,7 @@ class Admin::QuestionsController < Admin::ApplicationController
   end
 
   def index
+    @books = Structure.books
     @questions = Question.search(params[:search])
   end
 
@@ -25,5 +26,16 @@ class Admin::QuestionsController < Admin::ApplicationController
 
   def destroy
     
+  end
+
+  # create or update a group
+  def create_group
+    
+  end
+
+  # get group by question id
+  def get_group
+    question = Question.find(params[:id])
+    @questions = questoin.question_group.questions
   end
 end

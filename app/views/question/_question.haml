@@ -1,12 +1,10 @@
-- case q.class
-- when ChoiceQuestion
-  = render partial: "question/choice_question", locals: { q: q }
-- when BlankQuestion
-  = render partial: "question/blank_question", locals: { q: q }
-- when CalQuestion
-  = render partial: "question/cal_question", locals: { q: q }
-= form_tag("/admin/questions/move", method: "put") do
-  %p
-    = label_tag :search, "移至与该题同组"
-    = text_field_tag :tag
-    = submit_tag "move"
+.q_with_check_box
+  - case q.class
+  - when ChoiceQuestion
+    = render partial: "question/choice_question", locals: { q: q }
+  - when BlankQuestion
+    = render partial: "question/blank_question", locals: { q: q }
+  - when CalQuestion
+    = render partial: "question/cal_question", locals: { q: q }
+  = label_tag "check_#{q.id.to_s}", "选中"
+  = check_box_tag "check_#{q.id.to_s}", q.id.to_s
