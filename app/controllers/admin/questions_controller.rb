@@ -1,5 +1,6 @@
 class Admin::QuestionsController < Admin::ApplicationController
   def new
+    @books = Structure.books
     @question = Question.new
   end
 
@@ -30,7 +31,7 @@ class Admin::QuestionsController < Admin::ApplicationController
 
   # create or update a group
   def create_group
-    
+    render json: { success: true }  
   end
 
   # get group by question id

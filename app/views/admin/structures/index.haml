@@ -6,11 +6,12 @@
 = select_tag :sections, nil, :prompt => "请选择"
 = select_tag :subsections, nil, :prompt => "请选择"
 
+= button_to "删除该节点", "javascript:void(0);", id: "delete"
+
 = form_tag("/admin/structures", method: "post") do
-  %div
-    = label_tag :structure, "新目录"
-    = text_field_tag :structure
-    = text_field_tag :book_id, nil, :class => 'hide'
-    = text_field_tag :chapter_id, nil, :class => 'hide'
-    = text_field_tag :section_id, nil, :class => 'hide'
-    = submit_tag "创建"
+  = label_tag :structure, "新目录"
+  = text_field_tag :structure
+  = text_field_tag :book_id, nil, :class => 'hide'
+  = text_field_tag :chapter_id, nil, :class => 'hide'
+  = text_field_tag :section_id, nil, :class => 'hide'
+  = submit_tag "创建"

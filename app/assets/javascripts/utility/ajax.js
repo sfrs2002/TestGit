@@ -15,6 +15,9 @@
 				data = undefined;
 			}
 			// hack callback for requiring login
+			var fun = function(retval) {
+				callback(retval);
+			};
 			/*
 			var success = function(retval) {
 				// Console method should be commented in production
@@ -30,7 +33,7 @@
 				type: method,
 				url: url,
 				data: data,
-			//	success: success,
+				success: fun,
 				dataType: type
 			}, options));
 		};

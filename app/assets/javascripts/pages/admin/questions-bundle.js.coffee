@@ -1,7 +1,9 @@
-$(->
-  questions = $.parseJSON $("#data").attr("value");
-  selected_q_id_arr = []
+$ ->
   $(".hide").hide()
+  console.log($("#data"))
+  if $("#data").length > 0
+    questions = $.parseJSON $("#data").attr("value");
+    selected_q_id_arr = []
 
   $("#question_type_Choice").change (e) ->
     $(".choice").show()
@@ -34,4 +36,12 @@ $(->
       $(this).parent().remove()
       selected_q_id_arr = $.grep selected_q_id_arr, (v) ->
         v != q_id
-)
+
+  $("#group").click ->
+    $.postJSON '/admin/questions/create_group',
+      {
+        q_id_arr: selected_q_id_arr,
+      }, (data) ->
+        if data.success
+          $("#selected_q_list").empty()
+        console.log(data);
