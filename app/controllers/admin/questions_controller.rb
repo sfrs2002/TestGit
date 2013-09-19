@@ -8,6 +8,10 @@ class Admin::QuestionsController < Admin::ApplicationController
     question = Question.create_new(params[:question])
     answer = Answer.create_new(params[:question]["type"], params[:answer])
     question.answers << answer
+    question.allocate_structure(params[:book_id],
+      params[:chapter_id],
+      params[:section_id],
+      params[:subsection_id])
     redirect_to admin_question_url(question)
   end
 
@@ -17,8 +21,15 @@ class Admin::QuestionsController < Admin::ApplicationController
   end
 
   def index
+    logger.info "AAAAAAAAAAAAAAAAAAAAA"
+    logger.info params.inspect
+    logger.info "AAAAAAAAAAAAAAAAAAAAA"
     @books = Structure.books
-    @questions = Question.search(params[:search])
+    @questions = Question.search(params[:search],
+      params[:book_id],
+      params[:chapter_id],
+      params[:section_id],
+      params[:subsection_id])
   end
 
   def update

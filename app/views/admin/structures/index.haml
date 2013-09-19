@@ -1,17 +1,14 @@
 - content_for :head do
   = javascript_include_tag "pages/admin/structures-bundle"
   = stylesheet_link_tag "pages/admin/structures-bundle", :media => "all"
-= select_tag :books, options_from_collection_for_select(@books, "id", "name"), :prompt => "请选择"
-= select_tag :chapters, nil, :prompt => "请选择"
-= select_tag :sections, nil, :prompt => "请选择"
-= select_tag :subsections, nil, :prompt => "请选择"
 
-= button_to "删除该节点", "javascript:void(0);", id: "delete"
 
 = form_tag("/admin/structures", method: "post") do
+  = select_tag :book_id, options_from_collection_for_select(@books, "id", "name"), :prompt => "请选择"
+  = select_tag :chapter_id, nil, :prompt => "请选择"
+  = select_tag :section_id, nil, :prompt => "请选择"
+  = select_tag :subsection_id, nil, :prompt => "请选择"
   = label_tag :structure, "新目录"
   = text_field_tag :structure
-  = text_field_tag :book_id, nil, :class => 'hide'
-  = text_field_tag :chapter_id, nil, :class => 'hide'
-  = text_field_tag :section_id, nil, :class => 'hide'
   = submit_tag "创建"
+= button_to "删除该节点", "javascript:void(0);", id: "delete"

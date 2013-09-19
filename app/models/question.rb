@@ -2,14 +2,10 @@ class Question
   include Mongoid::Document
   include Mongoid::Timestamps
   field :content, type: String
-  # field :source, type: String
-  # field :level, type: Integer
-  # field :year, type: String
-  # field :region, type: Integer
   field :tag, type: String
   has_many :answers
-
   belongs_to :question_group
+  belongs_to :structure
 
   def self.create_new(question)
     Object.const_get("#{question['type']}Question").create_new(question)
@@ -25,8 +21,19 @@ class Question
     doc.save
   end
 
-  def self.search(str)
-    return Question.all if str.blank?
-    return Question.any_of({tag: Regexp.new(str)}, {content: Regexp.new(str)})
+  def self.search(str, book_id, chapter_id, section_id, subsection_id)
+    if book_id.blank?
+      questions = Question.all
+    else
+      structure = Structure.find_structure(book_id, chapter_id, section_id, subsection_id)
+      questions = structure.all_questions
+    end
+    return questions if str.blank?
+    return questions.any_of({tag: Regexp.new(str)}, {content: Regexp.new(str)})
+  end
+
+  def allocate_strucutre(book_id, chapter_id, section_id, subsection_id)
+    structure = Structure.find_structure(book_id, chapter_id, section_id, subsection_id)
+    structure.questions << self
   end
 end
