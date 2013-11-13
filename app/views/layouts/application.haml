@@ -6,7 +6,10 @@
     = yield :app_head
     = csrf_meta_tags
   %body
-    .message
-      %p.notice= notice
-      %p.alert= alert
+    = yield :app_nav
+    .container
+      - flash.each do |name, msg|
+        %div{:class => "alert alert-#{ name == :notice ? "success" : "error" }"}
+          %button{type: "button", class: "close", "data-dismiss" => "alert"} &times;
+          = msg
     = yield :app_content

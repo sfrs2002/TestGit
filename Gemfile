@@ -21,7 +21,9 @@ group :assets do
   gem 'twitter-bootstrap-rails', '~> 2.2.8'
 end
 
-# gem 'jquery-rails'
+gem 'jquery-rails'
+gem 'wkhtmltopdf-binary'
+gem 'wicked_pdf'
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'

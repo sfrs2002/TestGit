@@ -1,0 +1,8 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+Hello, 你好
+
+
+#q_list.container
+  .span9
+    - @questions.each do |q|
+      = render partial: "question/user/question", locals: { q: q }

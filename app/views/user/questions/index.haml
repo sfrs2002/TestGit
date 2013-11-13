@@ -1,0 +1,16 @@
+- content_for :head do
+  = javascript_include_tag "pages/user/questions-bundle"
+  = stylesheet_link_tag "pages/user/questions-bundle", :media => "all"
+
+.container
+  .span6
+    = form_tag("/user/questions", method: "get") do
+      %p
+        = image_tag "logo.png", :height => "32"
+        = text_field_tag :search
+        = submit_tag "search"
+
+#q_list.container
+  .span9
+    - @questions.each do |q|
+      = render partial: "question/user/question", locals: { q: q }

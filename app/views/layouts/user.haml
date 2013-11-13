@@ -1,0 +1,17 @@
+- content_for :app_head do
+  = yield :head
+- content_for :app_nav do
+  .navbar
+    .navbar-inner
+      %a.brand{href: "javascript:void();"} 题魔方
+      %ul.nav
+        %li.divider-vertical
+        %li
+          %a{href: "#"} 关于我们
+        %li.divider-vertical
+        %li
+          %a{href: "#"} 联系我们
+- content_for :app_content do
+  = yield
+
+= render :template => 'layouts/application'
