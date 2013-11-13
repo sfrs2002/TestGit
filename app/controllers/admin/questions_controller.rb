@@ -21,9 +21,6 @@ class Admin::QuestionsController < Admin::ApplicationController
   end
 
   def index
-    logger.info "AAAAAAAAAAAAAAAAAAAAA"
-    logger.info params.inspect
-    logger.info "AAAAAAAAAAAAAAAAAAAAA"
     @books = Structure.books
     @questions = Question.search(params[:search],
       params[:book_id],
@@ -42,7 +39,8 @@ class Admin::QuestionsController < Admin::ApplicationController
 
   # create or update a group
   def create_group
-    render json: { success: true }  
+    QuestionGroup.group(params[:q_id_arr])
+    render json: { success: true } and return
   end
 
   # get group by question id

@@ -11,13 +11,14 @@ gem 'haml'
 # in production environments by default.
 group :assets do
   gem 'sass-rails',   '~> 3.2.3'
+  gem "less-rails", '~> 2.4.2'
   gem 'coffee-rails', '~> 3.2.1'
+
   # See https://github.com/sstephenson/execjs#readme for more supported runtimes
-  # gem 'therubyracer', :platforms => :ruby
+  gem 'therubyracer', :platforms => :ruby
+
   gem 'uglifier', '>= 1.0.3'
-  gem 'jquery-rails', "~> 2.2.1"
-  gem "bootstrap-sass-rails", "~> 2.3.0.0"
-  gem 'handlebars_assets', '~> 0.14.1'
+  gem 'twitter-bootstrap-rails', '~> 2.2.8'
 end
 
 # gem 'jquery-rails'

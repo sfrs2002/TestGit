@@ -44,4 +44,5 @@ $ ->
       }, (data) ->
         if data.success
           $("#selected_q_list").empty()
+          selected_q_id_arr = []
         console.log(data);

@@ -32,7 +32,7 @@ class Question
     return questions.any_of({tag: Regexp.new(str)}, {content: Regexp.new(str)})
   end
 
-  def allocate_strucutre(book_id, chapter_id, section_id, subsection_id)
+  def allocate_structure(book_id, chapter_id, section_id, subsection_id)
     structure = Structure.find_structure(book_id, chapter_id, section_id, subsection_id)
     structure.questions << self
   end
