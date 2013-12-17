@@ -3,7 +3,7 @@ class Question
   include Mongoid::Timestamps
   field :type, type: Integer
   field :content, type: String
-  field :images, type: Array, default: []
+  field :question_images, type: Array, default: []
   field :image_uuid, type: String, default: ""
   field :items, type: Array, default: []
   field :choice_mode, type: Integer
@@ -26,7 +26,7 @@ class Question
   def self.create_choice_question(q, choice_mode)
     q = Question.create(type: CHOICE_QS,
       content: q[:content],
-      images: q[:images],
+      question_images: q[:question_images],
       image_uuid: q[:image_uuid],
       items: q[:items],
       choice_mode: choice_mode)
@@ -36,19 +36,19 @@ class Question
   def self.create_blank_question(q)
     q = Question.create(type: BLANK_QS,
       content: q[:content],
-      images: q[:images])
+      question_images: q[:question_images])
     q.create_images
   end
 
   def self.create_analysis_question(q)
     q = Question.create(type: ANALYSIS_QS,
       content: q[:content],
-      images: q[:images])
+      question_images: q[:question_images])
     q.create_images
   end
 
   def create_images
-    self.images.each do |image_name|
+    self.question_images.each do |image_name|
       img = Image.create(type: Image::USER_INSERT, file_name: image_name)
       self.images << img
     end

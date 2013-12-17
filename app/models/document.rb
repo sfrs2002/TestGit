@@ -36,27 +36,28 @@ class Document
             i = Magick::Image.read("#{image_dir}/#{name}").first
             old_name = name
             name = name.gsub(".wmf", ".png")
-            i = i.write("#{image_dir}/#{name}")
+            i.trim!
+            i.write("#{image_dir}/#{name}") { self. quality = 1 }
             File.delete("#{image_dir}/#{old_name}")
           end
           image_filename_ary << "#{image_dir}/#{name}"
         end
       end
     end
-    image_filename_ary.reverse!
+    image_filename_ary.sort!
     return nil if xml.nil?
 
     # parse question
     image_index = 0
     parsed_questions = []
-    q = { content: [], pure_text: [], images: [] }
+    q = { content: [], pure_text: [], question_images: [] }
     xml.xpath('//w:body')[0].elements.each do |e|
       # each element here is a paragraph
       contents = e.xpath('.//w:r')
       if contents.blank?
         # this paragraph has no content, the previous might be one question
-        parsed_questions << self.parse_one_question(q) if q.present?
-        q = {content: [], pure_text: [], images: []}
+        parsed_questions << self.parse_one_question(q) if q[:content].present?
+        q = {content: [], pure_text: [], question_images: []}
       else
         # this paragraph has contents
         p = {content: "", pure_text: ""}
@@ -75,7 +76,7 @@ class Document
             image_index += 1
           elsif content.xpath('.//w:drawing').present?
             # should be a figure
-            q[:images] << image_filename_ary[image_index]
+            q[:question_images] << image_filename_ary[image_index]
             image_index += 1
           end
         end
@@ -102,7 +103,7 @@ class Document
   end
 
   def parse_choice(q, choice_mode)
-    parsed_q = { content: "", images: [], items: [], image_uuid: self.uuid }
+    parsed_q = { content: "", question_images: [], items: [], image_uuid: self.uuid }
     if choice_mode == ONE_LINE
       q[:content][-1].scan(/A(.+)B(.+)C(.+)D(.*)/)[0].each do |item|
         parse_q[:items] << { "content" => item.strip }
@@ -123,13 +124,13 @@ class Document
       parsed_q[:items] << { "content" => q[:content][-1].scan(/D(.+)/)[0][0].strip }
       parsed_q[:content] = q[:content][0..-5].join('\n')
     end 
-    if q[:images].length < 4
-      parsed_q[:images] = q[:images]
+    if q[:question_images].length < 4
+      parsed_q[:question_images] = q[:question_images]
     elsif
-      parsed_q[:images] = q[:images][0.. -5]
+      parsed_q[:question_images] = q[:question_images][0.. -5]
       parsed_q[:items].each_with_index do |item, index|
         image_index = -(index + 1)
-        item["images"] = [q[:images][image_index]]
+        item["images"] = [q[:question_images][image_index]]
       end
     end
     question = Question.create_choice_question(parsed_q, choice_mode)
@@ -137,7 +138,7 @@ class Document
 
   def parse_blank(q, blank_number)
     parsed_q = {}
-    parsed_q[:images] = q[:images]
+    parsed_q[:question_images] = q[:question_images]
     parsed_q[:content] = q[:content].gsub(/\(\s+\)/, '<blank></blank>').gsub(/\[\s+\]/, '<blank></blank>').gsub(/_+/, '<blank></blank>')
     question = Question.create_blank_question(parsed_q)
   end
