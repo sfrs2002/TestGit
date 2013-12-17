@@ -1,4 +1,40 @@
+//= require 'utility/ajax'
 $ ->
+  $(document).on 'click', '.btn-drop', (e)->
+    qid = $(this).data('id')
+    $(this).removeClass('btn-danger')
+    $(this).removeClass('btn-drop')
+    $(this).addClass('btn-keep')
+    $(this).text('保留')
+    keep_q_ids = $('#keep_q_ids').val().split(',')
+    index = keep_q_ids.indexOf(qid)
+    if index > -1
+      keep_q_ids.splice(index, 1)
+    $('#keep_q_ids').val(keep_q_ids.join(','))
+
+  $(document).on 'click', '.btn-keep', (e)->
+    qid = $(this).data('id')
+    $(this).removeClass('btn-keep')
+    $(this).addClass('btn-drop')
+    $(this).addClass('btn-danger')
+    $(this).text('放弃')
+    keep_q_ids = $('#keep_q_ids').val().split(',')
+    index = keep_q_ids.indexOf(qid)
+    if index == -1
+      keep_q_ids.push(qid)
+    $('#keep_q_ids').val(keep_q_ids.join(','))
+
+
+
+  $(document).on 'click', '#confirm', (e)->
+    $.postJSON '/admin/questions/confirm',
+      {
+        keep_q_ids: window.keep_q_ids,
+      }, (data) ->
+        if data.success
+          alert('ok')
+          window.location.href = "/admin/questions"
+
   $(".hide").hide()
   console.log($("#data"))
   if $("#data").length > 0

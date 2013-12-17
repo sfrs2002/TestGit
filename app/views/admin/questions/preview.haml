@@ -1,0 +1,15 @@
+- content_for :head do
+  = javascript_include_tag "pages/admin/questions-bundle"
+  = stylesheet_link_tag "pages/admin/questions-bundle", :media => "all"
+  :javascript
+    window.keep_q_ids = "#{(@questions.map { |e| e.id.to_s }).join(',')}".split(',')
+
+.container
+  .span10.offset1
+    - @questions.each do |q|
+      = render partial: "question_partials/question", locals: { type: "preview",  q: q }
+    %br
+    = form_tag('/admin/questions/confirm', method: "post") do
+      = text_field_tag "keep_q_ids", "#{(@questions.map { |e| e.id.to_s }).join(',')}", class: "hide"
+      = submit_tag "创建", :class => 'btn-primary btn'
+

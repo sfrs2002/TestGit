@@ -1,0 +1,6 @@
+- content.split(/(<equation>.*?<\/equation>)/).each do |fragment|
+  - if fragment.start_with?('<equation>')
+    - file_name = fragment.scan(/<equation>(.*)<\/equation>/)[0][0]
+    =image_tag file_name.scan(/\/temp_images.+/)[0]
+  - else
+    %span= fragment

@@ -1,11 +1,11 @@
 .user_question
   .left
-    - case q.class
-    - when ChoiceQuestion
+    - case q.tyle
+    - when Question::CHOICE_QS
       = render partial: "question/choice_question", locals: { q: q }
-    - when BlankQuestion
+    - when Question::BLANK_QS
       = render partial: "question/blank_question", locals: { q: q }
-    - when CalQuestion
+    - when Question::ANALYSIS_QS
       = render partial: "question/cal_question", locals: { q: q }
   .right
     %a{href: "javascript:void();", role: "button", class: "btn"} export pdf

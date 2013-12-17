@@ -1,0 +1,19 @@
+- content_for :head do
+  = javascript_include_tag "pages/admin/questions-bundle"
+  = stylesheet_link_tag "pages/admin/questions-bundle", :media => "all"
+
+.question_with_operation
+  .left
+    - case q.type
+    - when Question::CHOICE_QS
+      = render partial: "question_partials/choice_question", locals: { q: q }
+    - when Question::BLANK_QS
+      = render partial: "question_partials/blank_question", locals: { q: q }
+    - when Question::ANALYSIS_QS
+      = render partial: "question_partials/cal_question", locals: { q: q }
+  .right
+    - if type == "preview"
+      = link_to "放弃", "javascript:void()", "data-id" => q._id.to_s, :class => 'btn btn-danger btn-drop'
+    - if type == "admin"
+      = link_to "删除", { controller: "/admin/questions", action: "destroy", id: q._id.to_s }, :method => "delete", :class => 'btn btn-mini, btn-danger'
+  .clear_both

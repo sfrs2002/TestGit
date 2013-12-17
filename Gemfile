@@ -24,6 +24,18 @@ end
 gem 'jquery-rails'
 gem 'wkhtmltopdf-binary'
 gem 'wicked_pdf'
+gem 'nokogiri', '~> 1.5.6'
+gem 'rubyzip', '< 1.0.0'
+gem 'carrierwave'
+gem 'rmagick', '2.13.2'
+
+group :development do
+  gem 'pry-rails', "~> 0.2.2"
+  gem 'pry-remote'
+  gem 'pry-nav'
+  gem "better_errors", "~> 0.8.0"
+  gem 'binding_of_caller'
+end
 
 # To use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.0.0'

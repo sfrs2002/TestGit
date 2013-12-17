@@ -1,51 +1,36 @@
+# encoding: utf-8
 class Admin::QuestionsController < Admin::ApplicationController
-  def new
-    @books = Structure.books
-    @question = Question.new
-  end
-
-  def create
-    question = Question.create_new(params[:question])
-    answer = Answer.create_new(params[:question]["type"], params[:answer])
-    question.answers << answer
-    question.allocate_structure(params[:book_id],
-      params[:chapter_id],
-      params[:section_id],
-      params[:subsection_id])
-    redirect_to admin_question_url(question)
-  end
-
-  def show
-    @question = Question.find(params[:id])
-    @answers = @question.answers
-  end
-
   def index
-    @books = Structure.books
-    @questions = Question.search(params[:search],
-      params[:book_id],
-      params[:chapter_id],
-      params[:section_id],
-      params[:subsection_id])
-  end
-
-  def update
-    
+    @questions = Question.where(preview: false)
   end
 
   def destroy
-    
+    q = Question.find(params[:id])
+    q.destroy
+    redirect_to action: :index
   end
 
-  # create or update a group
-  def create_group
-    QuestionGroup.group(params[:q_id_arr])
-    render json: { success: true } and return
+  def upload_file
   end
 
-  # get group by question id
-  def get_group
-    question = Question.find(params[:id])
-    @questions = questoin.question_group.questions
+  def file_uploaded
+    document = Document.new
+    document.document = params[:file]
+    document.store_document!
+    @parsed_qs = document.parse
+    redirect_to action: :preview, ids: (@parsed_qs.map { |e| e.id.to_s }).join(',')
+  end
+
+  def preview
+    @questions = Question.find(params[:ids].split(','))
+  end
+
+  def confirm
+    params[:keep_q_ids].split(',').each do |q_id|
+      q = Question.where(id: q_id).first
+      q.update_attributes({preview: false}) if q.present?
+    end
+    flash[:notice] = "成功导入题目"
+    redirect_to action: :index and return
   end
 end

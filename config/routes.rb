@@ -2,12 +2,10 @@ MathLib::Application.routes.draw do
   namespace :admin do
     resources :questions do
       collection do
-        post :create_group
-      end
-    end
-    resources :structures do
-      member do
-        get :children
+        get :upload_file
+        post :file_uploaded
+        get :preview
+        post :confirm
       end
     end
   end

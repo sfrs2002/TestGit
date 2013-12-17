@@ -1,0 +1,9 @@
+.choice_question.question
+  .content
+    %p
+      = render partial: "fragment_partials/fragment", locals: { content: q.content }
+  .items
+    - q.items.each_with_index do |item, index|
+      %p
+        %span{class: "item_prefix"}= d2c(index)
+        = render partial: "fragment_partials/fragment", locals: { content: item["content"] }

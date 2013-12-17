@@ -6,10 +6,19 @@
     = yield :app_head
     = csrf_meta_tags
   %body
-    = yield :app_nav
-    .container
-      - flash.each do |name, msg|
-        %div{:class => "alert alert-#{ name == :notice ? "success" : "error" }"}
-          %button{type: "button", class: "close", "data-dismiss" => "alert"} &times;
-          = msg
-    = yield :app_content
+    #wrap
+      = yield :app_nav
+      .container
+        - flash.each do |name, msg|
+          %div{:class => "alert alert-#{ name == :notice ? "success" : "error" }"}
+            %button{type: "button", class: "close", "data-dismiss" => "alert"} &times;
+            = msg
+      = yield :app_content
+      #push
+    #footer
+      .container
+        %p.muted.credit
+          = link_to "ChangeLog", { controller: "/admin/questions", action: "index" }, :method => "get"
+          %span= "|"
+          = link_to "Feedback", { controller: "/admin/questions", action: "index" }, :method => "get"
+

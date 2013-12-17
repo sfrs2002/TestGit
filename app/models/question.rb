@@ -1,39 +1,77 @@
 class Question
   include Mongoid::Document
   include Mongoid::Timestamps
+  field :type, type: Integer
   field :content, type: String
-  field :tag, type: String
-  has_many :answers
-  belongs_to :question_group
-  belongs_to :structure
+  field :images, type: Array, default: []
+  field :image_uuid, type: String, default: ""
+  field :items, type: Array, default: []
+  field :choice_mode, type: Integer
+  field :preview, type: Boolean, default: true
+  has_many :images, dependent: :delete
 
-  def self.create_new(question)
-    Object.const_get("#{question['type']}Question").create_new(question)
+  CHOICE_QS = 0
+  BLANK_QS = 1
+  ANALYSIS_QS = 2
+
+  ONE_LINE = 0
+  TWO_LINE = 1
+  FOUR_LINE = 2
+
+
+  before_destroy do |doc|
+    # delete images, and the image directory if it is empty
   end
 
-  after_create do |doc|
-    o = [('a'..'z'), (0..9)].map { |i| i.to_a }.flatten
-    tag = (0...5).map{ o[rand(o.length)] }.join
-    while Question.where(tag: tag).present?
-      tag = (0...5).map{ o[rand(o.length)] }.join
+  def self.create_choice_question(q, choice_mode)
+    q = Question.create(type: CHOICE_QS,
+      content: q[:content],
+      images: q[:images],
+      image_uuid: q[:image_uuid],
+      items: q[:items],
+      choice_mode: choice_mode)
+    q.create_images
+  end
+
+  def self.create_blank_question(q)
+    q = Question.create(type: BLANK_QS,
+      content: q[:content],
+      images: q[:images])
+    q.create_images
+  end
+
+  def self.create_analysis_question(q)
+    q = Question.create(type: ANALYSIS_QS,
+      content: q[:content],
+      images: q[:images])
+    q.create_images
+  end
+
+  def create_images
+    self.images.each do |image_name|
+      img = Image.create(type: Image::USER_INSERT, file_name: image_name)
+      self.images << img
     end
-    doc.tag = tag
-    doc.save
-  end
-
-  def self.search(str, book_id, chapter_id, section_id, subsection_id)
-    if book_id.blank?
-      questions = Question.all
-    else
-      structure = Structure.find_structure(book_id, chapter_id, section_id, subsection_id)
-      questions = structure.all_questions
+    self.content.scan(/<equation>(.*?)<\/equation>/).each do |equ_file_name|
+      img = Image.create(type: Image::MATH_EQUATION, file_name: equ_file_name[0])
+      self.images << img
     end
-    return questions if str.blank?
-    return questions.any_of({tag: Regexp.new(str)}, {content: Regexp.new(str)})
+    return self if self.type != CHOICE_QS
+    self.items.each do |item|
+      item["content"].scan(/<equation>(.*?)<\/equation>/).each do |equ_file_name|
+        img = Image.create(type: Image::MATH_EQUATION, file_name: equ_file_name[0])
+        self.images << img
+      end  
+      (item["images"] || []).each do |image_name|
+        img = Image.create(type: Image::USER_INSERT, file_name: image_name)
+        self.images << img
+      end
+    end
+    self
   end
 
-  def allocate_structure(book_id, chapter_id, section_id, subsection_id)
-    structure = Structure.find_structure(book_id, chapter_id, section_id, subsection_id)
-    structure.questions << self
+  def render_equation
+    self[:content_with_equations] = []
+    
   end
 end

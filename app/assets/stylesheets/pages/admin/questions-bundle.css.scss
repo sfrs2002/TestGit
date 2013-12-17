@@ -1,12 +1,13 @@
-.left, .right {
-  width:500px;
-}
-.left {
+.middle {
   float: left;
 }
-.right {
-  float: right;
+.question {
+  width: 750px;
 }
-.middle {
-	float: left;
+.question_with_operation {
+  border-bottom: 1px solid gray;
+  padding-top: 15px;
+}
+.btn-keep {
+  background-color: green;
 }

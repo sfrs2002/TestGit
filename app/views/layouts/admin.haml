@@ -1,7 +1,30 @@
 - content_for :app_head do
   = yield :head
+- content_for :app_nav do
+  .navbar
+    .navbar-inner
+      %a.brand{href: "/"} MathLib
+      %ul.nav
+        %li.divider-vertical
+        %li.active
+          %a{href: "/admin/questions/"} 题目列表
+        %li.divider-vertical
+        %li
+          %a{href: "/admin/questions/upload_file"} 导入题目
+        %li.divider-vertical
+        %li
+          %a{href: "#"} 联系我们
+      %ul.nav.pull-right
+        %li.dropdown
+          %a.dropdown-toggle{href: "#{}", "data-toggle" => "dropdown"}
+            Account
+            %b.caret
+          %ul.dropdown-menu
+            %li
+              %a{href: "/users/sign_in"} 登录
+            %li
+              %a{href: "/users/sign_up"} 注册
 - content_for :app_content do
-  %h1= "题魔方，管理员界面"
   = yield
 
 = render :template => 'layouts/application'
