@@ -10,7 +10,7 @@
     - when Question::BLANK_QS
       = render partial: "question_partials/blank_question", locals: { q: q }
     - when Question::ANALYSIS_QS
-      = render partial: "question_partials/cal_question", locals: { q: q }
+      / = render partial: "question_partials/cal_question", locals: { q: q }
   .right
     - if type == "preview"
       = link_to "放弃", "javascript:void()", "data-id" => q._id.to_s, :class => 'btn btn-danger btn-drop'

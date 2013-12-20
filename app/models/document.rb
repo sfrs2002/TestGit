@@ -6,7 +6,7 @@ class Document
   extend CarrierWave::Mount
   mount_uploader :document, DocumentUploader
 
-  attr_accessor :uuid
+  attr_accessor :uuid, :main_xml, :image_relation_xml, :image_relation, :image_dir, :image_name_map
 
   def initialize
     self.uuid = SecureRandom.uuid
@@ -22,36 +22,53 @@ class Document
 
   def parse
     filename = "public/uploads/documents/#{self.uuid}"
-    image_dir = FileUtils.mkpath("public/temp_images/#{self.uuid}")[0]
-    image_filename_ary = []
+    self.image_dir = FileUtils.mkpath("public/temp_images/#{self.uuid}")[0]
     # get the xml document and the image files
-    xml = nil
+    self.image_name_map = {}
     Zip::ZipFile.open(filename) do |zipfile|
       zipfile.each do |entry|
-        xml = Nokogiri::XML(entry.get_input_stream.read) if entry.name == "word/document.xml"
+        Rails.logger.info entry.name
+        # obtain content from the main document: document.xml
+        self.main_xml = Nokogiri::XML(entry.get_input_stream.read) if entry.name == "word/document.xml"
+        # obtain corresponding relations between images and elements in document.xml
+        self.image_relation_xml = Nokogiri::XML(entry.get_input_stream.read) if entry.name == "word/_rels/document.xml.rels"
+        # save image files
         if entry.name.match("word/media/image").present?
           name = entry.name.split('/')[-1]
-          File.open("#{image_dir}/#{name}", 'wb') {|file| file.write(entry.get_input_stream.read) }
+          # save the image file
+          File.open("#{self.image_dir}/#{name}", 'wb') {|file| file.write(entry.get_input_stream.read) }
+          # the wmf image cannot be displayed in most browsers, need to be converted into png images
           if name.end_with?(".wmf")
-            i = Magick::Image.read("#{image_dir}/#{name}").first
+            begin
+              i = Magick::Image.read("#{self.image_dir}/#{name}").first
+            rescue
+              next
+            end
             old_name = name
             name = name.gsub(".wmf", ".png")
-            i.trim!
-            i.write("#{image_dir}/#{name}") { self. quality = 1 }
-            File.delete("#{image_dir}/#{old_name}")
+            self.image_name_map[old_name] = name
+            # trim surrounding space and save the new format image
+            i.trim.write("#{self.image_dir}/#{name}") { self. quality = 1 }
+            # delete the old format image
+            File.delete("#{self.image_dir}/#{old_name}")
           end
-          image_filename_ary << "#{image_dir}/#{name}"
         end
       end
     end
-    image_filename_ary.sort!
-    return nil if xml.nil?
+    return nil if self.main_xml.nil?
+
+    # parse the relation between images and ids, and save in the image_relation instance varialbe
+    analyze_image_relation
 
     # parse question
     image_index = 0
     parsed_questions = []
     q = { content: [], pure_text: [], question_images: [] }
-    xml.xpath('//w:body')[0].elements.each do |e|
+    ###
+    para_index_ary = []
+    question_para_map = {}
+    ###
+    self.main_xml.xpath('//w:body')[0].elements.each_with_index do |e, index|
       # each element here is a paragraph
       contents = e.xpath('.//w:r')
       if contents.blank?
@@ -66,25 +83,66 @@ class Document
           if content.xpath('.//w:t').present?
             # should be text
             text = content.xpath('.//w:t')[0]
-            p[:content] += text.children[0].text if text.present?
-            p[:pure_text] += text.children[0].text if text.present?
+            if text.present?
+              text = text.children[0].text
+              # text is a blank string, check whether there is underline
+              text.gsub!(' ', '_') if content.xpath('.//w:u').present? if text.blank?
+              p[:content] += text
+              p[:pure_text] += text
+            end
           elsif content.xpath('.//w:object').present?
             # should be an equation
-            image_filename_ary[image_index]
-            p[:content] += "<equation>#{image_filename_ary[image_index]}</equation>"
+            object = content.xpath('.//w:object')[0]
+            rid = object.xpath('.//v:imagedata')[0].attributes["id"].value
+            p[:content] += "<equation>#{self.image_relation[rid]}</equation>"
             p[:pure_text] += "--equation--"
             image_index += 1
           elsif content.xpath('.//w:drawing').present?
-            # should be a figure
-            q[:question_images] << image_filename_ary[image_index]
+            drawing = content.xpath('.//w:drawing')[0]
+            rid = drawing.xpath('.//a:blip', "a" => "http://schemas.openxmlformats.org/drawingml/2006/main")[0].attributes["embed"].value
+            # judge whether it is an equation or figure based on the size of the image
+            if self.is_equation_image?(self.image_relation[rid])
+              # this image is equation
+              p[:content] += "<equation>#{self.image_relation[rid]}</equation>"
+              p[:pure_text] += "--equation--"
+            else
+              # this image is figure
+              q[:question_images] << self.image_relation[rid]
+            end
             image_index += 1
           end
         end
         q[:content] << p[:content]
         q[:pure_text] << p[:pure_text] if p[:pure_text].present?
+        # some white line only has white space
+        if q[:pure_text].blank? && q[:question_images].blank?
+          q = {content: [], pure_text: [], question_images: []}
+        end
       end
     end
     parsed_questions
+  end
+
+  def is_equation_image?(path)
+    begin
+      i = Magick::Image.read(path).first
+      return i.rows < 30
+    rescue
+      return false
+    end
+  end
+
+  def analyze_image_relation
+    self.image_relation = {}
+    self.image_relation_xml.elements[0].elements.each do |ele|
+      id = ele.attributes["Id"].value
+      target = ele.attributes["Target"].value
+      next if !target.start_with?("media/image")
+      old_name = target.scan(/media\/(.+)/)[0][0]
+      new_name = self.image_name_map[old_name]
+      name = new_name.blank? ? old_name : new_name
+      self.image_relation[id] = "#{self.image_dir}/#{name}"
+    end
   end
 
   def parse_one_question(q)
@@ -106,15 +164,15 @@ class Document
     parsed_q = { content: "", question_images: [], items: [], image_uuid: self.uuid }
     if choice_mode == ONE_LINE
       q[:content][-1].scan(/A(.+)B(.+)C(.+)D(.*)/)[0].each do |item|
-        parse_q[:items] << { "content" => item.strip }
+        parsed_q[:items] << { "content" => item.strip }
       end
       parsed_q[:content] = q[:content][0..-2].join('\n')
     elsif choice_mode == TWO_LINE
       q[:content][-2].scan(/A(.+)B(.+)/)[0].each do |item|
-        parse_q[:items] << { "content" => item.strip }
+        parsed_q[:items] << { "content" => item.strip }
       end
       q[:content][-1].scan(/C(.+)D(.+)/)[0].each do |item|
-        parse_q[:items] << { "content" => item.strip }
+        parsed_q[:items] << { "content" => item.strip }
       end
       parsed_q[:content] = q[:content][0..-3].join('\n')
     else
@@ -139,12 +197,18 @@ class Document
   def parse_blank(q, blank_number)
     parsed_q = {}
     parsed_q[:question_images] = q[:question_images]
-    parsed_q[:content] = q[:content].gsub(/\(\s+\)/, '<blank></blank>').gsub(/\[\s+\]/, '<blank></blank>').gsub(/_+/, '<blank></blank>')
+    q[:content].map! do |e|
+      e.gsub(/\(\s+\)/, '<blank></blank>').
+        gsub(/\[\s+\]/, '<blank></blank>').
+        gsub(/_{2,}/, '<blank></blank>')
+        # gsub(/\s{2,}/, '<blank></blank>')
+    end
+    parsed_q[:content] = q[:content].join('\n')
     question = Question.create_blank_question(parsed_q)
   end
 
   def parse_analysis(q)
-    question = Question.create_analysis_question(parsed_q)
+    question = Question.create_analysis_question(q)
   end
 
   def judge_question_type(text)

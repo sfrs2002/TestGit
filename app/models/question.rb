@@ -69,9 +69,4 @@ class Question
     end
     self
   end
-
-  def render_equation
-    self[:content_with_equations] = []
-    
-  end
 end

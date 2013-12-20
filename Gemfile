@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 gem 'rails', '3.2.14'
 
 gem 'mongoid', '~> 3.0.0'
-gem 'haml'
+gem 'haml', '~> 4.0.3'
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
@@ -21,20 +21,21 @@ group :assets do
   gem 'twitter-bootstrap-rails', '~> 2.2.8'
 end
 
-gem 'jquery-rails'
-gem 'wkhtmltopdf-binary'
-gem 'wicked_pdf'
+gem 'jquery-rails', '~> 3.0.4'
+gem 'wkhtmltopdf-binary', '~> 0.9.9.1'
+gem 'wicked_pdf', '~> 0.9.7'
 gem 'nokogiri', '~> 1.5.6'
 gem 'rubyzip', '< 1.0.0'
-gem 'carrierwave'
+gem 'carrierwave', '~> 0.8.0'
 gem 'rmagick', '2.13.2'
+gem 'rqrcode_png', '~> 0.1.2'
 
 group :development do
   gem 'pry-rails', "~> 0.2.2"
-  gem 'pry-remote'
-  gem 'pry-nav'
+  gem 'pry-remote', '~> 0.1.7'
+  gem 'pry-nav', '~> 0.2.3'
   gem "better_errors", "~> 0.8.0"
-  gem 'binding_of_caller'
+  gem 'binding_of_caller', '~> 0.7.2'
 end
 
 # To use ActiveModel has_secure_password
