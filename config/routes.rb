@@ -1,4 +1,7 @@
 MathLib::Application.routes.draw do
+  get "welcome/index"
+
+  devise_for :users, :controllers => {:registrations => "registrations"}
   namespace :admin do
     resources :questions do
       collection do
@@ -7,11 +10,23 @@ MathLib::Application.routes.draw do
         get :preview
         post :confirm
       end
+      member do
+        post :group
+        post :ungroup
+      end
     end
+    resources :groups
   end
 
   namespace :user do
-    resources :questions
+    resources :questions do
+      member do
+        post :add_to_note
+        delete :remove_from_note
+        post :add_to_print
+        delete :remove_from_print
+      end
+    end
   end
   # The priority is based upon order of creation:
   # first created -> highest priority.
@@ -62,7 +77,7 @@ MathLib::Application.routes.draw do
 
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
-  # root :to => 'welcome#index'
+  root :to => 'welcome#index'
 
   # See how all your routes lay out with "rake routes"
 

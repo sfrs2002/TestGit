@@ -4,6 +4,7 @@ gem 'rails', '3.2.14'
 
 gem 'mongoid', '~> 3.0.0'
 gem 'haml', '~> 4.0.3'
+gem 'devise'
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
 
@@ -25,7 +26,7 @@ gem 'jquery-rails', '~> 3.0.4'
 gem 'wkhtmltopdf-binary', '~> 0.9.9.1'
 gem 'wicked_pdf', '~> 0.9.7'
 gem 'nokogiri', '~> 1.5.6'
-gem 'rubyzip', '< 1.0.0'
+gem 'rubyzip', '>= 1.0.0'
 gem 'carrierwave', '~> 0.8.0'
 gem 'rmagick', '2.13.2'
 gem 'rqrcode_png', '~> 0.1.2'

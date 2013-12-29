@@ -15,5 +15,9 @@
     - if type == "preview"
       = link_to "放弃", "javascript:void()", "data-id" => q._id.to_s, :class => 'btn btn-danger btn-drop'
     - if type == "admin"
+      - if q.group.nil?
+        = link_to "添加分组", { controller: "/admin/questions", action: "group", id: q._id.to_s }, :method => "post", :class => 'btn btn-mini'
+      - else
+        = link_to "删除分组", { controller: "/admin/questions", action: "ungroup", id: q._id.to_s }, :method => "post", :class => 'btn btn-mini'
       = link_to "删除", { controller: "/admin/questions", action: "destroy", id: q._id.to_s }, :method => "delete", :class => 'btn btn-mini, btn-danger'
   .clear_both

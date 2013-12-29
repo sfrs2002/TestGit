@@ -1,0 +1,23 @@
+/- content_for :head do
+/  = stylesheet_link_tag "pages/admin/questions-bundle", :media => "all"
+
+.container
+  .span9.offset1
+    - if @notes.blank?
+      %span 还没有创建错题本
+    - else
+      %table{class: "table"}
+        %tr
+          %th 名称
+          %th 创建时间
+          %th 题目数量
+          %th 操作
+          %th
+        - @notes.each do |n|
+          %tr
+            %td= n.name
+            %td= n.created_at
+            %td= n.questions.length
+            %td
+              = link_to "删除", { controller: "user/notes", action: "destroy", id: n._id.to_s }, :method => "delete", :class => 'btn btn-mini btn-danger' 
+              = link_to "查看", { controller: "user/notes", action: "show", device_id: n._id.to_s }, :class => 'btn btn-mini'

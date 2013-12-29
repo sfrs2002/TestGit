@@ -13,17 +13,33 @@
           %a{href: "/admin/questions/upload_file"} 导入题目
         %li.divider-vertical
         %li
+          %a{href: "/admin/groups"} 所有分组
+        %li.divider-vertical
+        %li
+          %a{href: "/admin/groups/new"} 当前分组
+        %li.divider-vertical
+        %li
           %a{href: "#"} 联系我们
-      %ul.nav.pull-right
-        %li.dropdown
-          %a.dropdown-toggle{href: "#{}", "data-toggle" => "dropdown"}
-            Account
-            %b.caret
-          %ul.dropdown-menu
-            %li
-              %a{href: "/users/sign_in"} 登录
-            %li
-              %a{href: "/users/sign_up"} 注册
+      - if user_signed_in?
+        %ul.nav.pull-right
+          %li.dropdown
+            %a.dropdown-toggle{href: "#", "data-toggle" => "dropdown"}
+              = current_user.email
+              %b.caret
+            %ul.dropdown-menu
+              %li
+                %a{href: "/users/sign_out", "data-method" => "delete", rel: "nofollow"} 退出
+      - else
+        %ul.nav.pull-right
+          %li.dropdown
+            %a.dropdown-toggle{href: "#{}", "data-toggle" => "dropdown"}
+              Account
+              %b.caret
+            %ul.dropdown-menu
+              %li
+                %a{href: "/users/sign_in"} 登录
+              %li
+                %a{href: "/users/sign_up"} 注册
 - content_for :app_content do
   = yield
 

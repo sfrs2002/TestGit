@@ -15,5 +15,6 @@
 /tmp
 
 /public/uploads
+/public/downloads
 /public/temp_images
 /.htaccess

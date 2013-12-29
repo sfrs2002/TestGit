@@ -1,9 +1,12 @@
 - content_for :head do
   = javascript_include_tag "pages/admin/questions-bundle"
   = stylesheet_link_tag "pages/admin/questions-bundle", :media => "all"
-= form_tag("/admin/questions/file_uploaded", method: "post", multipart: true) do
-  %p
-    = label_tag :file, "File to Upload"
-    = file_field_tag "file"
-  %p
-    = submit_tag "创建"
+
+.container
+  .span9.offset1
+    = form_tag("/admin/questions/file_uploaded", method: "post", multipart: true) do
+      %p
+        = label_tag :file, "选择文件"
+        = file_field_tag "file"
+      %p
+        = submit_tag "创建"

@@ -7,10 +7,39 @@
       %ul.nav
         %li.divider-vertical
         %li
+          %a{href: "/user/questions/" } 题目列表
+        %li.divider-vertical
+        %li
+          %a{href: "/user/questions/wrong" } 错题本
+        %li.divider-vertical
+        %li
+          %a{href: "/user/questions/exercise" } 练习纸
+        %li.divider-vertical
+        %li
           %a{href: "#"} 关于我们
         %li.divider-vertical
         %li
           %a{href: "#"} 联系我们
+      - if user_signed_in?
+        %ul.nav.pull-right
+          %li.dropdown
+            %a.dropdown-toggle{href: "#", "data-toggle" => "dropdown"}
+              = current_user.email
+              %b.caret
+            %ul.dropdown-menu
+              %li
+                %a{href: "/users/sign_out", "data-method" => "delete", rel: "nofollow"} 退出
+      - else
+        %ul.nav.pull-right
+          %li.dropdown
+            %a.dropdown-toggle{href: "#{}", "data-toggle" => "dropdown"}
+              Account
+              %b.caret
+            %ul.dropdown-menu
+              %li
+                %a{href: "/users/sign_in"} 登录
+              %li
+                %a{href: "/users/sign_up"} 注册
 - content_for :app_content do
   = yield
 

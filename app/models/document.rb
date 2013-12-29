@@ -1,6 +1,6 @@
 # encoding: utf-8
 require 'fileutils'
-require 'zip/zip'
+require 'zip'
 require 'RMagick'
 class Document
   extend CarrierWave::Mount
@@ -25,7 +25,7 @@ class Document
     self.image_dir = FileUtils.mkpath("public/temp_images/#{self.uuid}")[0]
     # get the xml document and the image files
     self.image_name_map = {}
-    Zip::ZipFile.open(filename) do |zipfile|
+    Zip::File.open(filename) do |zipfile|
       zipfile.each do |entry|
         Rails.logger.info entry.name
         # obtain content from the main document: document.xml
@@ -68,7 +68,7 @@ class Document
     para_index_ary = []
     question_para_map = {}
     ###
-    self.main_xml.xpath('//w:body')[0].elements.each_with_index do |e, index|
+    self.main_xml.at('//w:body').elements.each_with_index do |e, index|
       # each element here is a paragraph
       contents = e.xpath('.//w:r')
       if contents.blank?
@@ -82,7 +82,7 @@ class Document
           # the content is text
           if content.xpath('.//w:t').present?
             # should be text
-            text = content.xpath('.//w:t')[0]
+            text = content.at('.//w:t')
             if text.present?
               text = text.children[0].text
               # text is a blank string, check whether there is underline
@@ -92,14 +92,14 @@ class Document
             end
           elsif content.xpath('.//w:object').present?
             # should be an equation
-            object = content.xpath('.//w:object')[0]
-            rid = object.xpath('.//v:imagedata')[0].attributes["id"].value
+            object = content.at('.//w:object')
+            rid = object.at('.//v:imagedata').attributes["id"].value
             p[:content] += "<equation>#{self.image_relation[rid]}</equation>"
             p[:pure_text] += "--equation--"
             image_index += 1
           elsif content.xpath('.//w:drawing').present?
-            drawing = content.xpath('.//w:drawing')[0]
-            rid = drawing.xpath('.//a:blip', "a" => "http://schemas.openxmlformats.org/drawingml/2006/main")[0].attributes["embed"].value
+            drawing = content.at('.//w:drawing')
+            rid = drawing.at('.//a:blip', "a" => "http://schemas.openxmlformats.org/drawingml/2006/main").attributes["embed"].value
             # judge whether it is an equation or figure based on the size of the image
             if self.is_equation_image?(self.image_relation[rid])
               # this image is equation
@@ -134,9 +134,9 @@ class Document
 
   def analyze_image_relation
     self.image_relation = {}
-    self.image_relation_xml.elements[0].elements.each do |ele|
-      id = ele.attributes["Id"].value
+    self.image_relation_xml.xpath("//xmlns:Relationship").each do |ele|
       target = ele.attributes["Target"].value
+      id = ele.attributes["Id"].value
       next if !target.start_with?("media/image")
       old_name = target.scan(/media\/(.+)/)[0][0]
       new_name = self.image_name_map[old_name]

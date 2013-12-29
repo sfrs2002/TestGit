@@ -1,0 +1,22 @@
+- content_for :head do
+  = stylesheet_link_tag "pages/admin/questions-bundle", :media => "all"
+
+.container
+  .span9.offset1
+    - if @group.nil? || @group.questions.blank?
+      %span 还没有选择题目
+    - else
+      - @group.questions.each do |q|
+        .question_with_operation
+          .left
+            - case q.type
+            - when Question::CHOICE_QS
+              = render partial: "question_partials/choice_question", locals: { q: q }
+            - when Question::BLANK_QS
+              = render partial: "question_partials/blank_question", locals: { q: q }
+            - when Question::ANALYSIS_QS
+              / = render partial: "question_partials/cal_question", locals: { q: q }
+          .right
+            = link_to "删除", { controller: "/admin/questions", action: "ungroup", id: q._id.to_s }, :method => "post", :class => 'btn btn-mini'
+          .clear_both
+      = link_to "确认", { controller: "/admin/groups", action: "create" }, :method => "post", :class => 'btn btn-primary'

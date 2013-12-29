@@ -33,4 +33,24 @@ class Admin::QuestionsController < Admin::ApplicationController
     flash[:notice] = "成功导入题目"
     redirect_to action: :index and return
   end
+
+  def group
+    group = Group.find_or_create_preview
+    question = Question.find(params[:id])
+    group.questions << question
+    flash[:notice] = "已添加到新分组"
+    redirect_to action: :index and return
+  end
+
+  def ungroup
+    question = Question.find(params[:id])
+    group = question.group
+    group.questions.delete(question)
+    if group.preview
+      redirect_to new_admin_group_path and return
+    else
+      # redirect_to admin_group_path(id: group.id.to_s) and return
+      redirect_to admin_groups_path and return
+    end
+  end
 end

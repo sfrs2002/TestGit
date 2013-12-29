@@ -9,6 +9,7 @@ class Question
   field :choice_mode, type: Integer
   field :preview, type: Boolean, default: true
   has_many :images, dependent: :delete
+  belongs_to :group
 
   CHOICE_QS = 0
   BLANK_QS = 1

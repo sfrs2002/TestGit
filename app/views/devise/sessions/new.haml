@@ -1,0 +1,25 @@
+.container
+  .row
+    .span6.offset3
+      = form_for(resource, :html => {:class => "form-horizontal"}, :as => resource_name, :url => session_path(resource_name)) do |f|
+        %fieldset
+          %legend 登录
+          .control-group
+            = f.label :email, "邮箱", :class => 'control-label'
+            .controls
+              = f.email_field :email, :autofocus => true
+          .control-group
+            = f.label :password, "密码", :class => 'control-label'
+            .controls
+              = f.password_field :password
+          - if devise_mapping.rememberable?
+            .control-group
+              .controls
+                = f.label :remember_me, :class => "checkbox" do
+                  = f.check_box :remember_me
+                  保持登录状态
+                = f.submit "登录", :class => "btn"
+          - else
+            .control-group
+              = f.submit "登录", :class => "btn"
+

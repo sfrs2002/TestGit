@@ -8,4 +8,24 @@ class User::QuestionsController < User::ApplicationController
       end
     end
   end
+
+  def add_to_note
+    @note = current_user.notes.find(params[:note_id])
+    retval = @note.add_question(params[:id], description)
+    render json: retval
+  end
+
+  def remove_from_note
+    @note = current_user.notes.find(params[:note_id])
+    retval = @note.remove_question(params[:id])
+    render json: retval
+  end
+
+  def add_to_print
+  	
+  end
+
+  def remove_from_print
+    
+  end
 end
