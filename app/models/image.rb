@@ -41,7 +41,7 @@ class Image
     # copy the original image file
     FileUtils.cp(file_name, "#{q_img_ori_dir}/#{self.id.to_s}.#{image_type}")
     # copy the object image binary file
-    FileUtils.cp(obj_file_name, "#{q_img_obj_dir}/#{self.id.to_s}.#{image_type}") if obj_file_name.present?
+    FileUtils.cp(obj_file_name, "#{q_img_obj_dir}/#{self.id.to_s}.bin") if obj_file_name.present?
     # convert to png file and save in the processed image file
     begin
       i = Magick::Image.read("#{q_img_ori_dir}/#{self.id.to_s}.#{image_type}").first
