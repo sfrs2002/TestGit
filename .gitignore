@@ -14,6 +14,7 @@
 /log/*.log
 /tmp
 
+/public/question_images/*
 /public/uploads
 /public/downloads
 /public/temp_images

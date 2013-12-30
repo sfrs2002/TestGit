@@ -33,25 +33,9 @@ class Document
         # obtain corresponding relations between images and elements in document.xml
         self.image_relation_xml = Nokogiri::XML(entry.get_input_stream.read) if entry.name == "word/_rels/document.xml.rels"
         # save image files
-        if entry.name.match("word/media/image").present?
+        if entry.name.match("word/media/image").present? || entry.name.match("word/embeddings/").present?
           name = entry.name.split('/')[-1]
-          # save the image file
           File.open("#{self.image_dir}/#{name}", 'wb') {|file| file.write(entry.get_input_stream.read) }
-          # the wmf image cannot be displayed in most browsers, need to be converted into png images
-          if name.end_with?(".wmf")
-            begin
-              i = Magick::Image.read("#{self.image_dir}/#{name}").first
-            rescue
-              next
-            end
-            old_name = name
-            name = name.gsub(".wmf", ".png")
-            self.image_name_map[old_name] = name
-            # trim surrounding space and save the new format image
-            i.trim.write("#{self.image_dir}/#{name}") { self. quality = 1 }
-            # delete the old format image
-            File.delete("#{self.image_dir}/#{old_name}")
-          end
         end
       end
     end
@@ -64,10 +48,6 @@ class Document
     image_index = 0
     parsed_questions = []
     q = { content: [], pure_text: [], question_images: [] }
-    ###
-    para_index_ary = []
-    question_para_map = {}
-    ###
     self.main_xml.at('//w:body').elements.each_with_index do |e, index|
       # each element here is a paragraph
       contents = e.xpath('.//w:r')
@@ -93,8 +73,15 @@ class Document
           elsif content.xpath('.//w:object').present?
             # should be an equation
             object = content.at('.//w:object')
-            rid = object.at('.//v:imagedata').attributes["id"].value
-            p[:content] += "<equation>#{self.image_relation[rid]}</equation>"
+            image_rid = object.at('.//v:imagedata').attributes["id"].value
+            object_rid = object.at('.//o:OLEObject').attributes["id"].value
+            width = object.at('.//v:shape').attributes["style"].value.scan(/width:(.*?)pt/)[0][0]
+            height = object.at('.//v:shape').attributes["style"].value.scan(/height:(.*?)pt/)[0][0]
+            image_id = Image.create_object_equation_image(self.image_relation[image_rid],
+              self.image_relation[object_rid],
+              width,
+              height)
+            p[:content] += "<equation>#{image_id}</equation>"
             p[:pure_text] += "--equation--"
             image_index += 1
           elsif content.xpath('.//w:drawing').present?
@@ -107,7 +94,8 @@ class Document
               p[:pure_text] += "--equation--"
             else
               # this image is figure
-              q[:question_images] << self.image_relation[rid]
+              image_id = Image.create_question_image(self.image_relation[rid])
+              q[:question_images] << image_id
             end
             image_index += 1
           end
@@ -137,11 +125,13 @@ class Document
     self.image_relation_xml.xpath("//xmlns:Relationship").each do |ele|
       target = ele.attributes["Target"].value
       id = ele.attributes["Id"].value
-      next if !target.start_with?("media/image")
-      old_name = target.scan(/media\/(.+)/)[0][0]
-      new_name = self.image_name_map[old_name]
-      name = new_name.blank? ? old_name : new_name
-      self.image_relation[id] = "#{self.image_dir}/#{name}"
+      if target.start_with?("media/image")
+        name = target.scan(/media\/(.+)/)[0][0]
+        self.image_relation[id] = "#{self.image_dir}/#{name}"
+      elsif target.start_with?("embeddings")
+        name = target.scan(/embeddings\/(.+)/)[0][0]
+        self.image_relation[id] = "#{self.image_dir}/#{name}"
+      end
     end
   end
 

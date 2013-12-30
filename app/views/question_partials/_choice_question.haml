@@ -3,8 +3,8 @@
     %p
       = render partial: "fragment_partials/fragment", locals: { content: q.content }
   .question_images
-    - q.question_images.each do |question_image|
-      = image_tag question_image.scan(/\/temp_images.+/)[0]
+    - q.question_images.each do |image_id|
+      = image_tag Image.find(image_id).render_image
   .items
     - q.items.each_with_index do |item, index|
       %p

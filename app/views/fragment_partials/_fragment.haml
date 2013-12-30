@@ -1,7 +1,7 @@
 - content.gsub("<blank></blank>", "_____").split(/(<equation>.*?<\/equation>)/).each do |fragment|
   - if fragment.start_with?('<equation>')
-    - file_name = fragment.scan(/<equation>(.*)<\/equation>/)[0][0]
-    = image_tag file_name.scan(/\/temp_images.+/)[0]
+    - image_id = fragment.scan(/<equation>(.*)<\/equation>/)[0][0]
+    = image_tag Image.find(image_id).render_image
   - else
     - rows = fragment.split("\\n")
     - rows[0..-2].each do |row|

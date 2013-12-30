@@ -31,37 +31,37 @@ class Question
       image_uuid: q[:image_uuid],
       items: q[:items],
       choice_mode: choice_mode)
-    q.create_images
+    q.tidyup_images
   end
 
   def self.create_blank_question(q)
     q = Question.create(type: BLANK_QS,
       content: q[:content],
       question_images: q[:question_images])
-    q.create_images
+    q.tidyup_images
   end
 
   def self.create_analysis_question(q)
     q = Question.create(type: ANALYSIS_QS,
       content: q[:content],
       question_images: q[:question_images])
-    q.create_images
+    q.tidyup_images
   end
 
-  def create_images
-    self.question_images.each do |image_name|
-      img = Image.create(type: Image::USER_INSERT, file_name: image_name)
-      self.images << img
+  def tidyup_images
+    self.question_images.each do |image_id|
+      image = Image.find(image_id)
+      image.tidyup(self)
     end
-    self.content.scan(/<equation>(.*?)<\/equation>/).each do |equ_file_name|
-      img = Image.create(type: Image::MATH_EQUATION, file_name: equ_file_name[0])
-      self.images << img
+    self.content.scan(/<equation>(.*?)<\/equation>/).each do |image_id|
+      image = Image.find(image_id[0])
+      image.tidyup(self)
     end
     return self if self.type != CHOICE_QS
     self.items.each do |item|
-      item["content"].scan(/<equation>(.*?)<\/equation>/).each do |equ_file_name|
-        img = Image.create(type: Image::MATH_EQUATION, file_name: equ_file_name[0])
-        self.images << img
+      item["content"].scan(/<equation>(.*?)<\/equation>/).each do |image_id|
+        image = Image.find(image_id[0])
+        image.tidyup(self)
       end  
       (item["images"] || []).each do |image_name|
         img = Image.create(type: Image::USER_INSERT, file_name: image_name)
