@@ -3,7 +3,9 @@ require 'fileutils'
 require 'zip'
 require 'integer'
 class Export
-  attr_accessor :q_ids_ary, :filename, :main_doc, :rel_doc, :text_ele, :para_ele, :shape_type, :equ_ele, :image_rel, :obj_rel, :first_equation, :rid_index
+  attr_accessor :q_ids_ary, :filename, :main_doc, :rel_doc
+  attr_accessor :text_ele, :para_ele, :shape_type, :equ_ele, :image_ele, :image_rel, :obj_rel
+  attr_accessor :first_equation, :rid_index
 
   def initialize(q_ids_ary)
     # the questions to be exported
@@ -14,10 +16,11 @@ class Export
     @main_doc = Nokogiri::XML(File.read("public/downloads/#{@filename}/blank_doc/word/document.xml"))
     @rel_doc = Nokogiri::XML(File.read("public/downloads/#{@filename}/blank_doc/word/_rels/document.xml.rels"))
     template_xml = Nokogiri::XML(File.read("lib/template/word/document.xml"))
-    @text_ele = template_xml.elements[0].elements[0].elements[0].elements[2].clone
-    @shape_type = template_xml.elements[0].elements[0].elements[0].elements[3].elements[1].elements[0].clone
-    @equ_ele = template_xml.elements[0].elements[0].elements[0].elements[4].clone
-    @para_ele = @main_doc.elements[0].elements[0].elements[0].clone
+    @text_ele = template_xml.at('.//w:t').parent.clone
+    @shape_type = template_xml.at('.//v:shapetype').clone
+    @equ_ele = template_xml.xpath('.//w:object')[1].parent.clone
+    @image_ele = template_xml.at('.//w:pict').parent.clone
+    @para_ele = @main_doc.at('.//w:p').clone
     template_rel = Nokogiri::XML(File.read("lib/template/word/_rels/document.xml.rels"))
     @image_rel = template_rel.elements[0].elements[7]
     @obj_rel = template_rel.elements[0].elements[6]
@@ -33,6 +36,12 @@ class Export
       q.content.gsub("<blank></blank>", "_____").split(/(<equation>.*?<\/equation>)/).each do |fragment|
         append_fragment(fragment)
       end
+      if q.question_images.present?
+        append_para
+        q.question_images.each do |image|
+          append_image(image.id)
+        end
+      end
       if q.type == Question::CHOICE_QS
         q.items.each_with_index do |e, index|
           append_para
@@ -42,11 +51,17 @@ class Export
           end
         end
       end
+      append_qrcode(qid)
       append_para
     end
-
     # compress and save as docx file
     filename = generate_docx
+  end
+
+  # append blank para to the last
+  def append_para
+    last_para = @main_doc.xpath('.//w:p')[-1]
+    last_para.add_next_sibling(@para_ele.clone)
   end
 
   def append_fragment(fragment)
@@ -64,16 +79,18 @@ class Export
     end
   end
 
-  # append blank para to the last
-  def append_para
-    last_para = @main_doc.xpath('.//w:p')[-1]
-    last_para.add_next_sibling(@para_ele.clone)
-  end
-
-  # append equation w:r to theend of the last paragraph
+  # append equation w:r to the end of the last paragraph
   def append_equation(image_id)
     image = Image.find(image_id)
-    image_file_name = "image#{@rid_index}.wmf"
+    if image.type == Image::MATH_EQUATION
+      append_mathtype(image)
+    else
+      append_image(image)
+    end
+  end
+
+  # append mathtype equation w:r to the end of the last paragraph
+  def append_mathtype(image)
     obj_file_name = "oleObject#{@rid_index}.bin"
     equ_ele = @equ_ele.clone
     if @first_equation
@@ -82,7 +99,6 @@ class Export
       equ_ele.at('.//v:shape').add_previous_sibling(shape_type)
     end
     equ_ele.at(".//v:shape").attributes["style"].value = "width:#{image.width}pt;height:#{image.height}pt"
-
     equ_ele.at(".//v:imagedata").attributes["id"].value = "rId#{@rid_index}"
     image_rel = @image_rel.clone
     image_rel.attributes["Id"].value = "rId#{@rid_index}"
@@ -95,12 +111,27 @@ class Export
     obj_rel = @obj_rel.clone
     obj_rel.attributes["Id"].value = "rId#{@rid_index}"
     obj_rel.attributes["Target"].value = "embeddings/oleObject#{@rid_index}.bin"
-    FileUtils.cp(image.file_name, "public/downloads/#{@filename}/blank_doc/word/embeddings/oleObject#{@rid_index}.bin")
+    FileUtils.cp(image.obj_file_name, "public/downloads/#{@filename}/blank_doc/word/embeddings/oleObject#{@rid_index}.bin")
     @rel_doc.at('.//xmlns:Relationships').add_child(obj_rel)
+    @rid_index += 1
+    last_para = @main_doc.xpath('.//w:p')[-1]
+    last_para.add_child(equ_ele)
+  end
+
+  # append image w:r to the end of the last paragraph
+  def append_image(image)
+    image_ele = @image_ele.clone
+    image_ele.at(".//v:shape").attributes["style"].value = "width:#{image.width}pt;height:#{image.height}pt"
+    image_ele.at(".//v:imagedata").attributes["id"].value = "rId#{@rid_index}"
+    image_rel = @image_rel.clone
+    image_rel.attributes["Id"].value = "rId#{@rid_index}"
+    image_rel.attributes["Target"].value = "media/image#{@rid_index}.#{image.file_type}"
+    FileUtils.cp(image.file_name, "public/downloads/#{@filename}/blank_doc/word/media/image#{@rid_index}.#{image.file_type}")
+    @rel_doc.at('.//xmlns:Relationships').add_child(image_rel)
     @rid_index += 1
 
     last_para = @main_doc.xpath('.//w:p')[-1]
-    last_para.add_child(equ_ele)
+    last_para.add_child(image_ele)
   end
 
   # append text w:r to the end of the last paragraph
@@ -109,6 +140,23 @@ class Export
     temp_text_ele.elements[1].content = content
     last_para = @main_doc.xpath('.//w:p')[-1]
     last_para.add_child(temp_text_ele)
+  end
+
+  def append_qrcode(question_id)
+    q = Question.find(question_id)
+    append_para
+    image_ele = @image_ele.clone
+    image_ele.at(".//v:shape").attributes["style"].value = "width:50pt;height:50pt;visibility:visible;mso-wrap-style:square"
+    image_ele.at(".//v:imagedata").attributes["id"].value = "rId#{@rid_index}"
+    image_rel = @image_rel.clone
+    image_rel.attributes["Id"].value = "rId#{@rid_index}"
+    image_rel.attributes["Target"].value = "media/image#{@rid_index}.png"
+    FileUtils.cp("public/question_images/#{q.id.to_s}/#{q.id.to_s}.png", "public/downloads/#{@filename}/blank_doc/word/media/image#{@rid_index}.png")
+    @rel_doc.at('.//xmlns:Relationships').add_child(image_rel)
+    @rid_index += 1
+
+    last_para = @main_doc.xpath('.//w:p')[-1]
+    last_para.add_child(image_ele)
   end
 
   def generate_docx

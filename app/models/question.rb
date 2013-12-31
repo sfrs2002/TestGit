@@ -1,3 +1,4 @@
+require 'rqrcode_png'
 class Question
   include Mongoid::Document
   include Mongoid::Timestamps
@@ -24,6 +25,19 @@ class Question
     # delete images, and the image directory if it is empty
   end
 
+  after_create do |doc|
+    # create question images folder
+    q_img_dir = "public/question_images/#{doc.id.to_s}"
+    q_img_obj_dir = "#{q_img_dir}/objects"
+    q_img_ori_dir = "#{q_img_dir}/originals"
+    q_img_pro_dir = "#{q_img_dir}/processed"
+    FileUtils.mkdir([q_img_dir, q_img_obj_dir, q_img_ori_dir, q_img_pro_dir])
+    # create the QR code image
+    qr = RQRCode::QRCode.new("http://localhost:3000/q/#{doc.id.to_s}", :size => 4, :level => :h )
+    png = qr.to_img
+    png.resize(90, 90).save("#{q_img_dir}/#{doc.id.to_s}.png")
+  end
+
   def self.create_choice_question(q, choice_mode)
     q = Question.create(type: CHOICE_QS,
       content: q[:content],
@@ -31,7 +45,7 @@ class Question
       image_uuid: q[:image_uuid],
       items: q[:items],
       choice_mode: choice_mode)
-    q.tidyup_images
+      q.tidyup_images
   end
 
   def self.create_blank_question(q)
@@ -63,9 +77,9 @@ class Question
         image = Image.find(image_id[0])
         image.tidyup(self)
       end  
-      (item["images"] || []).each do |image_name|
-        img = Image.create(type: Image::USER_INSERT, file_name: image_name)
-        self.images << img
+      (item["images"] || []).each do |image_id|
+        image = Image.find(image_id)
+        image.tidyup(self)
       end
     end
     self

@@ -6,10 +6,10 @@ class Document
   extend CarrierWave::Mount
   mount_uploader :document, DocumentUploader
 
-  attr_accessor :uuid, :main_xml, :image_relation_xml, :image_relation, :image_dir, :image_name_map
+  attr_accessor :uuid, :main_doc, :rel_doc, :resource_rel, :resource_dir
 
   def initialize
-    self.uuid = SecureRandom.uuid
+    @uuid = SecureRandom.uuid
   end
 
   CHOICE_QS = 0
@@ -20,35 +20,31 @@ class Document
   TWO_LINE = 1
   FOUR_LINE = 2
 
+  EMU_2_PT = 12700.0
+
   def parse
-    filename = "public/uploads/documents/#{self.uuid}"
-    self.image_dir = FileUtils.mkpath("public/temp_images/#{self.uuid}")[0]
-    # get the xml document and the image files
-    self.image_name_map = {}
-    Zip::File.open(filename) do |zipfile|
+    # get the xml document and the resource files
+    @resource_dir = FileUtils.mkpath("public/temp_images/#{@uuid}")[0]
+    Zip::File.open("public/uploads/documents/#{@uuid}") do |zipfile|
       zipfile.each do |entry|
-        Rails.logger.info entry.name
-        # obtain content from the main document: document.xml
-        self.main_xml = Nokogiri::XML(entry.get_input_stream.read) if entry.name == "word/document.xml"
-        # obtain corresponding relations between images and elements in document.xml
-        self.image_relation_xml = Nokogiri::XML(entry.get_input_stream.read) if entry.name == "word/_rels/document.xml.rels"
-        # save image files
+        @main_doc = Nokogiri::XML(entry.get_input_stream.read) if entry.name == "word/document.xml"
+        @rel_doc = Nokogiri::XML(entry.get_input_stream.read) if entry.name == "word/_rels/document.xml.rels"
         if entry.name.match("word/media/image").present? || entry.name.match("word/embeddings/").present?
           name = entry.name.split('/')[-1]
-          File.open("#{self.image_dir}/#{name}", 'wb') {|file| file.write(entry.get_input_stream.read) }
+          File.open("#{@resource_dir}/#{name}", 'wb') {|file| file.write(entry.get_input_stream.read) }
         end
       end
     end
-    return nil if self.main_xml.nil?
+    return nil if @main_doc.nil?
 
-    # parse the relation between images and ids, and save in the image_relation instance varialbe
-    analyze_image_relation
+    # parse the relation between resource and ids, and save in the @resource_rel
+    analyze_resource_rel
 
     # parse question
     image_index = 0
     parsed_questions = []
     q = { content: [], pure_text: [], question_images: [] }
-    self.main_xml.at('//w:body').elements.each_with_index do |e, index|
+    @main_doc.at('//w:body').elements.each_with_index do |e, index|
       # each element here is a paragraph
       contents = e.xpath('.//w:r')
       if contents.blank?
@@ -77,8 +73,8 @@ class Document
             object_rid = object.at('.//o:OLEObject').attributes["id"].value
             width = object.at('.//v:shape').attributes["style"].value.scan(/width:(.*?)pt/)[0][0]
             height = object.at('.//v:shape').attributes["style"].value.scan(/height:(.*?)pt/)[0][0]
-            image_id = Image.create_object_equation_image(self.image_relation[image_rid],
-              self.image_relation[object_rid],
+            image_id = Image.create_object_equation_image(@resource_rel[image_rid],
+              @resource_rel[object_rid],
               width,
               height)
             p[:content] += "<equation>#{image_id}</equation>"
@@ -87,14 +83,17 @@ class Document
           elsif content.xpath('.//w:drawing').present?
             drawing = content.at('.//w:drawing')
             rid = drawing.at('.//a:blip', "a" => "http://schemas.openxmlformats.org/drawingml/2006/main").attributes["embed"].value
+            width = drawing.at('.//wp:extent').attributes["cx"].value.to_f / EMU_2_PT
+            height = drawing.at('.//wp:extent').attributes["cy"].value.to_f / EMU_2_PT
             # judge whether it is an equation or figure based on the size of the image
-            if self.is_equation_image?(self.image_relation[rid])
+            if self.is_equation_image?(@resource_rel[rid])
               # this image is equation
-              p[:content] += "<equation>#{self.image_relation[rid]}</equation>"
+              image_id = Image.create_image_equation_image(@resource_rel[rid], width, height)
+              p[:content] += "<equation>#{image_id}</equation>"
               p[:pure_text] += "--equation--"
             else
               # this image is figure
-              image_id = Image.create_question_image(self.image_relation[rid])
+              image_id = Image.create_question_image(@resource_rel[rid], width, height)
               q[:question_images] << image_id
             end
             image_index += 1
@@ -120,17 +119,17 @@ class Document
     end
   end
 
-  def analyze_image_relation
-    self.image_relation = {}
-    self.image_relation_xml.xpath("//xmlns:Relationship").each do |ele|
+  def analyze_resource_rel
+    @resource_rel = {}
+    @rel_doc.xpath("//xmlns:Relationship").each do |ele|
       target = ele.attributes["Target"].value
       id = ele.attributes["Id"].value
       if target.start_with?("media/image")
         name = target.scan(/media\/(.+)/)[0][0]
-        self.image_relation[id] = "#{self.image_dir}/#{name}"
+        @resource_rel[id] = "#{@resource_dir}/#{name}"
       elsif target.start_with?("embeddings")
         name = target.scan(/embeddings\/(.+)/)[0][0]
-        self.image_relation[id] = "#{self.image_dir}/#{name}"
+        @resource_rel[id] = "#{@resource_dir}/#{name}"
       end
     end
   end
@@ -151,7 +150,7 @@ class Document
   end
 
   def parse_choice(q, choice_mode)
-    parsed_q = { content: "", question_images: [], items: [], image_uuid: self.uuid }
+    parsed_q = { content: "", question_images: [], items: [], image_uuid: @uuid }
     if choice_mode == ONE_LINE
       q[:content][-1].scan(/A(.+)B(.+)C(.+)D(.*)/)[0].each do |item|
         parsed_q[:items] << { "content" => item.strip }
@@ -191,7 +190,6 @@ class Document
       e.gsub(/\(\s+\)/, '<blank></blank>').
         gsub(/\[\s+\]/, '<blank></blank>').
         gsub(/_{2,}/, '<blank></blank>')
-        # gsub(/\s{2,}/, '<blank></blank>')
     end
     parsed_q[:content] = q[:content].join('\n')
     question = Question.create_blank_question(parsed_q)
