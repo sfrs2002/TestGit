@@ -1,0 +1,12 @@
+- content_for :head do
+  = javascript_include_tag "pages/admin/prints-bundle"
+  = stylesheet_link_tag "pages/admin/prints-bundle", :media => "all"
+
+.container
+  .span9.offset1
+    - if current_user.print.questions.blank?
+      %span= "打印纸为空"
+    - else
+      = link_to "导出到word", { controller: "/admin/prints", action: "print" }, :method => "get", :class => 'btn btn-primary'
+      - current_user.print.questions.each do |q|
+        = render partial: "question_partials/admin/question", locals: { type: "print",  q: q }

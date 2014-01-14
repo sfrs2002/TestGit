@@ -22,8 +22,14 @@ class Export
     @image_ele = template_xml.at('.//w:pict').parent.clone
     @para_ele = @main_doc.at('.//w:p').clone
     template_rel = Nokogiri::XML(File.read("lib/template/word/_rels/document.xml.rels"))
-    @image_rel = template_rel.elements[0].elements[7]
-    @obj_rel = template_rel.elements[0].elements[6]
+    template_rel.at('//xmlns:Relationships').elements.each do |relation_ship|
+      if relation_ship.attributes["Type"].value.end_with?("oleObject")
+        @obj_rel = relation_ship
+      end
+      if relation_ship.attributes["Type"].value.end_with?("image")
+        @image_rel = relation_ship
+      end
+    end
     @first_equation = true
     @rid_index = 7
   end
@@ -114,6 +120,14 @@ class Export
     FileUtils.cp(image.obj_file_name, "public/downloads/#{@filename}/blank_doc/word/embeddings/oleObject#{@rid_index}.bin")
     @rel_doc.at('.//xmlns:Relationships').add_child(obj_rel)
     @rid_index += 1
+
+    equ_ele.at(".//w:object").attributes["dxaOrig"].value = image.orig_width.to_s
+    equ_ele.at(".//w:object").attributes["dyaOrig"].value = image.orig_height.to_s
+
+    shape_id = SecureRandom.uuid
+    equ_ele.at(".//v:shape").attributes["id"].value = shape_id
+    equ_ele.at(".//o:OLEObject").attributes["ShapeID"].value = shape_id
+
     last_para = @main_doc.xpath('.//w:p')[-1]
     last_para.add_child(equ_ele)
   end

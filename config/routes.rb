@@ -13,9 +13,20 @@ MathLib::Application.routes.draw do
       member do
         post :group
         post :ungroup
+        post :print
+        post :unprint
       end
     end
-    resources :groups
+    resources :groups do
+      member do
+        post :update_name
+      end
+    end
+    resources :prints do
+      member do
+        get :print
+      end
+    end
   end
 
   namespace :user do

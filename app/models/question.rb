@@ -11,6 +11,7 @@ class Question
   field :preview, type: Boolean, default: true
   has_many :images, dependent: :delete
   belongs_to :group
+  belongs_to :print
 
   CHOICE_QS = 0
   BLANK_QS = 1
@@ -33,7 +34,7 @@ class Question
     q_img_pro_dir = "#{q_img_dir}/processed"
     FileUtils.mkdir([q_img_dir, q_img_obj_dir, q_img_ori_dir, q_img_pro_dir])
     # create the QR code image
-    qr = RQRCode::QRCode.new("http://localhost:3000/q/#{doc.id.to_s}", :size => 4, :level => :h )
+    qr = RQRCode::QRCode.new("http://localhost:3000/q/#{doc.id.to_s}", :size => 4, :level => :l )
     png = qr.to_img
     png.resize(90, 90).save("#{q_img_dir}/#{doc.id.to_s}.png")
   end

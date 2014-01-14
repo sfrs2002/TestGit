@@ -1,0 +1,23 @@
+- content_for :head do
+  = javascript_include_tag "pages/admin/groups-bundle"
+  = stylesheet_link_tag "pages/admin/groups-bundle", :media => "all"
+
+.group-name
+  .group-name-preview= group.name
+  .group-name-edit
+    = text_field_tag 'group_name', group.name, class: 'group_name'
+    = link_to "确定", "javascript:void(0);", :class => 'btn btn-mini ok', "data-group-id" => group.id.to_s
+    = link_to "取消", "javascript:void(0);", :class => 'btn btn-mini cancel'
+- group.questions.each do |q|
+  .question_with_operation
+    .left
+      - case q.type
+      - when Question::CHOICE_QS
+        = render partial: "question_partials/choice_question", locals: { q: q }
+      - when Question::BLANK_QS
+        = render partial: "question_partials/blank_question", locals: { q: q }
+      - when Question::ANALYSIS_QS
+        / = render partial: "question_partials/cal_question", locals: { q: q }
+    .right
+      = link_to "删除", { controller: "/admin/questions", action: "ungroup", id: q.id.to_s }, :method => "post", :class => 'btn btn-mini'
+    .clear_both

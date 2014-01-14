@@ -53,4 +53,19 @@ class Admin::QuestionsController < Admin::ApplicationController
       redirect_to admin_groups_path and return
     end
   end
+
+  def print
+    print = current_user.ensure_print
+    question = Question.find(params[:id])
+    print.questions << question
+    flash[:notice] = "已添加到打印纸"
+    redirect_to action: :index and return
+  end
+
+  def unprint
+    print = current_user.ensure_print
+    question = Question.find(params[:id])
+    print.questions.delete(question)
+    redirect_to admin_print_path(print) and return
+  end
 end

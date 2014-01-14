@@ -41,5 +41,10 @@ class User
   field :admin, :type => Boolean, :default => false
 
   has_many :notes
-  has_one :print
+  has_one :print, class_name: "Print", inverse_of: :user
+  has_many :history_prints, class_name: "Print", inverse_of: :history_user
+
+  def ensure_print
+    self.print || self.create_print
+  end
 end

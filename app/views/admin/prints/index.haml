@@ -1,0 +1,21 @@
+- content_for :head do
+  = javascript_include_tag "pages/admin/prints-bundle"
+  = stylesheet_link_tag "pages/admin/prints-bundle", :media => "all"
+
+.container
+  .span9.offset1
+    - if @prints.blank?
+      %span 还没有打印历史
+    - else
+      %table{class: "table"}
+        %tr
+          %th 名称
+          %th 打印时间
+          %th 操作
+          %th
+        - @prints.each do |p|
+          %tr
+            %td
+              = link_to p.name, { controller: "prints", action: "show", id: p._id.to_s }
+            %td= p.created_at
+            %td

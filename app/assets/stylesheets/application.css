@@ -12,15 +12,15 @@
  *= require bootstrap_and_overrides
  */
 
- .right {
+.right {
   float: right;
- }
- .left {
+}
+.left {
   float: left;
- }
- .clear_both {
+}
+.clear_both {
   clear: both;
- }
+}
 
 /* Sticky footer styles
 -------------------------------------------------- */

@@ -5,4 +5,4 @@
 .container
   .span9.offset1
     - @questions.each do |q|
-      = render partial: "question_partials/question", locals: { type: "admin",  q: q }
+      = render partial: "question_partials/admin/question", locals: { type: "admin",  q: q }

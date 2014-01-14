@@ -73,10 +73,14 @@ class Document
             object_rid = object.at('.//o:OLEObject').attributes["id"].value
             width = object.at('.//v:shape').attributes["style"].value.scan(/width:(.*?)pt/)[0][0]
             height = object.at('.//v:shape').attributes["style"].value.scan(/height:(.*?)pt/)[0][0]
+            orig_width = object.attributes["dxaOrig"].value.to_i
+            orig_height = object.attributes["dyaOrig"].value.to_i
             image_id = Image.create_object_equation_image(@resource_rel[image_rid],
               @resource_rel[object_rid],
               width,
-              height)
+              height,
+              orig_width,
+              orig_height)
             p[:content] += "<equation>#{image_id}</equation>"
             p[:pure_text] += "--equation--"
             image_index += 1

@@ -14,10 +14,22 @@
   .right
     - if type == "preview"
       = link_to "放弃", "javascript:void()", "data-id" => q._id.to_s, :class => 'btn btn-danger btn-drop'
+    - if type == "print"
+      = link_to "从打印纸删除", { controller: "/admin/questions", action: "unprint", id: q._id.to_s }, :method => "post", :class => 'btn btn-danger'
+
     - if type == "admin"
       - if q.group.nil?
-        = link_to "添加分组", { controller: "/admin/questions", action: "group", id: q._id.to_s }, :method => "post", :class => 'btn btn-mini'
+        = link_to "添加到新分组", { controller: "/admin/questions", action: "group", id: q._id.to_s }, :method => "post", :class => 'btn'
       - else
-        = link_to "删除分组", { controller: "/admin/questions", action: "ungroup", id: q._id.to_s }, :method => "post", :class => 'btn btn-mini'
+        = link_to "从分组删除", { controller: "/admin/questions", action: "ungroup", id: q._id.to_s }, :method => "post", :class => 'btn'
+        %br
+        %br
+        = link_to "查看分组", { controller: "/admin/groups", action: "show", id: q.group._id.to_s }, :method => "get", :class => 'btn'
+      %br
+      %br
+      - if !current_user.print.questions.include?(q)
+        = link_to "添加到打印纸", { controller: "/admin/questions", action: "print", id: q._id.to_s }, :method => "post", :class => 'btn'
+        %br
+        %br
       = link_to "删除", { controller: "/admin/questions", action: "destroy", id: q._id.to_s }, :method => "delete", :class => 'btn btn-mini, btn-danger'
   .clear_both

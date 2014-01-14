@@ -10,16 +10,22 @@ class Image
   field :file_type, type: String
   field :width, type: Float
   field :height, type: Float
+  # original width and height for mathtype equations
+  # corresponding to the w:dxaOrig and w:dyaOrig attributes in the document.xml file
+  field :orig_width, type: Integer
+  field :orig_height, type: Integer
   belongs_to :question
   
   USER_INSERT = 1
   MATH_EQUATION = 2
   IMAGE_EQUATION = 3
 
-  def self.create_object_equation_image(file_name, obj_file_name, width, height)
+  def self.create_object_equation_image(file_name, obj_file_name, width, height, orig_width, orig_height)
     image = Image.create(type: MATH_EQUATION,
       width: width.to_f,
       height: height.to_f,
+      orig_width: orig_width,
+      orig_height: orig_height,
       file_name: file_name,
       obj_file_name: obj_file_name,
       file_type: file_name.scan(/\.(.*)/)[0][0])

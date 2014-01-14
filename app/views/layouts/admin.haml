@@ -1,4 +1,5 @@
 - content_for :app_head do
+  = javascript_include_tag "layouts/admin-layout"
   = yield :head
 - content_for :app_nav do
   .navbar
@@ -17,6 +18,12 @@
         %li.divider-vertical
         %li
           %a{href: "/admin/groups/new"} 当前分组
+        %li.divider-vertical
+        %li
+          %a{href: "/admin/prints/#{current_user.ensure_print.id.to_s}"} 打印纸
+        %li.divider-vertical
+        %li
+          %a{href: "/admin/prints"} 打印历史
         %li.divider-vertical
         %li
           %a{href: "#"} 联系我们
