@@ -18,5 +18,6 @@
 /public/uploads
 /public/downloads
 /public/temp_images
+/public/assets
 /.htaccess
 /config/mongoid.yml
