@@ -19,3 +19,4 @@
 /public/downloads
 /public/temp_images
 /.htaccess
+/config/mongoid.yml
