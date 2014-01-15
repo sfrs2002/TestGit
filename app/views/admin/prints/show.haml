@@ -7,6 +7,9 @@
     - if current_user.print.questions.blank?
       %span= "打印纸为空"
     - else
-      = link_to "导出到word", { controller: "/admin/prints", action: "print" }, :method => "get", :class => 'btn btn-primary'
-      - current_user.print.questions.each do |q|
+      - if @print.is_current_print?
+        = link_to "导出到word", { controller: "/admin/prints", action: "print" }, :method => "get", :class => 'btn btn-primary'
+      - else
+        = link_to "复制为当前打印纸", { controller: "/admin/prints", action: "clone", id: @print.id.to_s }, :method => "post", :class => 'btn btn-primary'
+      - @print.questions.each do |q|
         = render partial: "question_partials/admin/question", locals: { type: "print",  q: q }

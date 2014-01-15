@@ -25,6 +25,8 @@ MathLib::Application.routes.draw do
     resources :prints do
       member do
         get :print
+        post :clear
+        post :clone
       end
     end
   end

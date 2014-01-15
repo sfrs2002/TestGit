@@ -11,7 +11,7 @@ class Question
   field :preview, type: Boolean, default: true
   has_many :images, dependent: :delete
   belongs_to :group
-  belongs_to :print
+  has_and_belongs_to_many :print
 
   CHOICE_QS = 0
   BLANK_QS = 1
